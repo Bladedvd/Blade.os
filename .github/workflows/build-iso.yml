@@ -1,0 +1,34 @@
+name: Build LeveOS ISO
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+      options: --privileged
+    steps:
+      - name: Preparar Arch
+        run: |
+          pacman-key --init
+          pacman-key --populate archlinux
+          pacman -Syu --noconfirm --needed git base-devel sudo
+
+      - uses: actions/checkout@v4
+
+      - name: Gerar ISO
+        run: |
+          chmod +x build-leveos.sh
+          ./build-leveos.sh
+
+      - name: Publicar ISO nos Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: leveos-${{ github.run_number }}
+          name: LeveOS (build ${{ github.run_number }})
+          files: leveos/out/*.iso
